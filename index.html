@@ -1,0 +1,199 @@
+]<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTU Robotics Club QR Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.0.0/dist/jsQR.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #video-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        video {
+            width: 100%;
+            display: block;
+            border-radius: 8px;
+        }
+        #result-container {
+            margin-top: 20px;
+            padding: 15px;
+            min-height: 50px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        p {
+            margin: 5px 0 0 0;
+            font-weight: normal;
+            font-size: 0.9em;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>GTU Robotics Club QR Code Attendance Scanner</h1>
+    
+    <div id="video-container">
+        <video id="video" playsinline></video>
+    </div>
+
+    <div id="result-container">Scan a QR code to mark attendance...</div>
+    
+    <a href="/export_pdf" download="attendance_report.pdf">
+        <button>Download Attendance Report (PDF)</button>
+    </a>
+
+    <script>
+        const video = document.getElementById('video');
+        const resultContainer = document.getElementById('result-container');
+        
+        let lastScanTime = 0;
+        let lastScannedId = null;
+        const SCAN_COOLDOWN = 3000; // 3 seconds cooldown
+
+        // Start the camera feed
+        async function startScanner() {
+            try {
+                // Request access to the camera, preferring the rear camera on mobile
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true); // Required for iOS
+                video.play();
+                requestAnimationFrame(tick);
+            } catch (e) {
+                console.error("Camera Error:", e);
+                // Display error message if camera access fails
+                resultContainer.innerHTML = '<p style="color: red;">Could not access camera. Please grant permission and refresh.</p>';
+            }
+        }
+
+        // Processing loop
+        function tick() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Use a canvas to capture the frame
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Scan the image data for a QR code
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert", // Optimization
+                });
+                
+                if (code) {
+                    handleQrCode(code.data);
+                }
+            }
+            // Keep looping
+            requestAnimationFrame(tick);
+        }
+
+        // Handle a detected QR code
+        async function handleQrCode(grc_id) {
+            const currentTime = Date.now();
+            
+            // Apply cooldown to prevent duplicate rapid scans
+            if (currentTime - lastScanTime < SCAN_COOLDOWN && grc_id === lastScannedId) {
+                return;
+            }
+            
+            lastScanTime = currentTime;
+            lastScannedId = grc_id;
+
+            try {
+                // Send the ID to the Flask server
+                const response = await fetch("/mark_attendance", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ grc_id: grc_id }),
+                });
+                
+                const data = await response.json();
+                updateResultUI(data);
+
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                updateResultUI({
+                    status: "error",
+                    message: "Network error. Could not connect to server."
+                });
+            }
+        }
+
+        // Update the display message
+        function updateResultUI(data) {
+            resultContainer.classList.remove("success", "error");
+
+            if (data.status.includes("Check-In") || data.status.includes("Check-Out")) {
+                resultContainer.classList.add("success");
+                resultContainer.innerHTML = `
+                    <strong>${data.message}</strong>
+                    <p style="margin: 5px 0 0 0;">ID: ${data.grc_id} | Time: ${data.timestamp}</p>
+                `;
+            } else {
+                resultContainer.classList.add("error");
+                resultContainer.innerHTML = `<strong>${data.message}</strong>`;
+            }
+        }
+
+        // Start the process when the script loads
+        startScanner();
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+Timestamp,GRC_ID,Name,Department,Status
+2025-10-20 01:31:48,26GRC601,pragati sharma,Circuitry,Present
+2025-10-20 01:31:59,,Unknown,Unknown,Not Found
+2025-10-20 01:32:02,,Unknown,Unknown,Not Found
+2025-10-20 01:32:30,,Unknown,Unknown,Not Found
+2025-10-20 01:32:40,26GRC227,Aryan Desai,Management,Present
+2025-10-20 01:32:55,26GRC002,Patadiya Dhairya Kamleshbhai,Circuitry,Present
+2025-10-20 01:32:58,26GRC001,Joshi Om Dharmeshbhai,Circuitry,Present
+2025-10-20 01:32:59,26GRC330,Tejas Rajnikant Sathawara,Mechanical,Present
+2025-10-20 01:33:00,26GRC326,Prajapati Om Sunnykumar,Mechanical,Present
+2025-10-20 01:33:02,26GRC309,Parmar Darshan,Mechanical,Present
+2025-10-20 01:33:09,26GRC302,Paida Harsh,Mechanical,Present
+2025-10-20 01:33:10,26GRC300,Zaid Haidermiya Saiyad,Mechanical,Present
+2025-10-20 01:33:15,26GRC300,Zaid Haidermiya Saiyad,Mechanical,Present
+2025-10-20 01:33:16,26GRC293,Raval Hariom Bhaveshbhai,Mechanical,Present
+2025-10-20 01:33:18,26GRC287,Panchal Harshkumar bharatbhai,Mechanical,Present
+2025-10-20 01:33:19,26GRC285,Dhruv Udaybhai Zala,Mechanical,Present
+2025-10-20 01:33:20,26GRC282,Dhruviil Panchal,Mechanical,Present
+2025-10-20 01:33:22,26GRC283,Thummar Ayush,Mechanical,Present
+2025-10-20 01:33:24,26GRC278,Patel Prince Mukeshbhai,Mechanical,Present
+2025-10-20 01:33:26,26GRC276,Dev Rajkamal,Mechanical,Present
+2025-10-20 01:33:27,26GRC270,Kachhadiya Harmin Bharat Bhai,Mechanical,Present
+2025-10-20 01:33:28,26GRC269,Savaliya Dhyey,Mechanical,Present
+2025-10-20 01:33:29,26GRC268,Thakur Harsh Raj Mukund,Mechanical,Present
+2025-10-20 01:33:30,26GRC267,Chauhan Hitesh Manojbhai,Mechanical,Present
+2025-10-20 01:33:31,26GRC504,Vishvesh K. Solanki,Management,Present
+2025-10-20 01:33:32,26GRC334,Dhruvesh Patel,Management,Present
+2025-10-20 01:33:33,26GRC333,MohammadSuhan Salim Halepotra,Management,Present
+2025-10-20 01:33:34,26GRC272,Dave Shiv,Management,Present
+2025-10-20 01:33:36,26GRC248,Dev Prashantbhai Chokshi,Management,Present
+2025-10-20 01:33:38,26GRC245,Vidhaan Mahendra Prajapati,Management,Present
+2025-10-20 01:33:39,26GRC244,Krish savani,Management,Present
+2025-10-20 01:33:40,26GRC237,PRAJVAL DAVRA,Management,Present
+2025-10-20 01:33:43,26GRC235,Geetesh mahajan,Management,Present
+2025-10-20 01:33:44,26GRC228,Pranav Jain,Management,Present
+2025-10-20 01:35:21,26GRC601,pragati sharma,Circuitry,Present
+2025-10-20 01:35:31,26GRC227,Aryan Desai,Management,Present
+2025-10-20 01:35:35,26GRC003,Patel Darsh Mahendra bhai,Circuitry,Present
+2025-10-20 01:35:39,26GRC003,Patel Darsh Mahendra bhai,Circuitry,Present
+2025-10-20 01:35:41,26GRC002,Patadiya Dhairya Kamleshbhai,Circuitry,Present
+2025-10-20 01:35:44,26GRC002,Patadiya Dhairya Kamleshbhai,Circuitry,Present
+2025-10-20 01:35:45,26GRC001,Joshi Om Dharmeshbhai,Circuitry,Present
+2025-10-20 01:35:46,26GRC330,Tejas Rajnikant Sathawara,Mechanical,Present
+2025-10-20 01:35:48,26GRC326,Prajapati Om Sunnykumar,Mechanical,Present
+2025-10-20 01:35:55,26GRC304,Taksh Hemal Pandya,Mechanical,Present
+2025-10-20 01:35:59,26GRC303,Patel Shubh Vishnubhai,Mechanical,Present
+2025-10-20 01:36:00,26GRC302,Paida Harsh,Mechanical,Present
+2025-10-20 01:36:02,26GRC300,Zaid Haidermiya Saiyad,Mechanical,Present
+2025-10-20 01:36:04,26GRC293,Raval Hariom Bhaveshbhai,Mechanical,Present
+2025-10-20 01:36:05,26GRC287,Panchal Harshkumar bharatbhai,Mechanical,Present
+2025-10-20 01:36:06,26GRC285,Dhruv Udaybhai Zala,Mechanical,Present
+2025-10-20 01:36:07,26GRC282,Dhruviil Panchal,Mechanical,Present
+2025-10-20 01:36:09,26GRC278,Patel Prince Mukeshbhai,Mechanical,Present
+2025-10-20 01:36:11,26GRC270,Kachhadiya Harmin Bharat Bhai,Mechanical,Present
+2025-10-20 01:36:12,26GRC269,Savaliya Dhyey,Mechanical,Present
+2025-10-20 01:36:21,26GRC269,Savaliya Dhyey,Mechanical,Present
+2025-10-20 01:36:23,26GRC268,Thakur Harsh Raj Mukund,Mechanical,Present
+2025-10-20 01:36:24,26GRC267,Chauhan Hitesh Manojbhai,Mechanical,Present
+2025-10-20 01:36:27,26GRC504,Vishvesh K. Solanki,Management,Present
+2025-10-20 01:36:28,26GRC334,Dhruvesh Patel,Management,Present
+2025-10-20 01:36:29,26GRC333,MohammadSuhan Salim Halepotra,Management,Present
+2025-10-20 01:36:30,26GRC272,Dave Shiv,Management,Present
+2025-10-20 01:36:30,26GRC248,Dev Prashantbhai Chokshi,Management,Present
+2025-10-20 01:36:31,26GRC245,Vidhaan Mahendra Prajapati,Management,Present
+2025-10-20 01:36:32,26GRC244,Krish savani,Management,Present
+2025-10-20 01:36:32,26GRC237,PRAJVAL DAVRA,Management,Present
+2025-10-20 01:36:33,26GRC236,Manav Jogendra Sharma,Management,Present
+2025-10-20 01:36:34,26GRC235,Geetesh mahajan,Management,Present
+2025-10-20 01:36:34,26GRC228,Pranav Jain,Management,Present
+2025-10-20 01:36:36,26GRC235,Geetesh mahajan,Management,Present
+2025-10-20 01:36:37,26GRC236,Manav Jogendra Sharma,Management,Present
+2025-10-20 01:36:38,26GRC237,PRAJVAL DAVRA,Management,Present
+2025-10-20 01:36:39,26GRC334,Dhruvesh Patel,Management,Present
+2025-10-20 01:36:40,26GRC504,Vishvesh K. Solanki,Management,Present
+2025-10-20 01:36:40,26GRC267,Chauhan Hitesh Manojbhai,Mechanical,Present
+2025-10-20 01:36:41,26GRC268,Thakur Harsh Raj Mukund,Mechanical,Present
+2025-10-20 01:36:41,26GRC269,Savaliya Dhyey,Mechanical,Present
+2025-10-20 01:36:42,26GRC270,Kachhadiya Harmin Bharat Bhai,Mechanical,Present
+2025-10-20 01:36:42,26GRC276,Dev Rajkamal,Mechanical,Present
+2025-10-20 01:36:43,26GRC283,Thummar Ayush,Mechanical,Present
+2025-10-20 01:36:43,26GRC282,Dhruviil Panchal,Mechanical,Present
+2025-10-20 01:36:44,26GRC285,Dhruv Udaybhai Zala,Mechanical,Present
+2025-10-20 01:36:44,26GRC287,Panchal Harshkumar bharatbhai,Mechanical,Present
+2025-10-20 01:36:44,26GRC293,Raval Hariom Bhaveshbhai,Mechanical,Present
+2025-10-20 01:36:45,26GRC300,Zaid Haidermiya Saiyad,Mechanical,Present
+2025-10-20 01:36:45,26GRC302,Paida Harsh,Mechanical,Present
+2025-10-20 01:36:45,26GRC303,Patel Shubh Vishnubhai,Mechanical,Present
+2025-10-20 01:36:51,26GRC601,pragati sharma,Circuitry,Present
+2025-10-20 01:36:52,26GRC227,Aryan Desai,Management,Present
+2025-10-20 01:36:52,26GRC003,Patel Darsh Mahendra bhai,Circuitry,Present
+2025-10-20 01:36:53,26GRC002,Patadiya Dhairya Kamleshbhai,Circuitry,Present
+2025-10-20 01:36:53,26GRC001,Joshi Om Dharmeshbhai,Circuitry,Present
+2025-10-20 01:36:53,26GRC330,Tejas Rajnikant Sathawara,Mechanical,Present
+2025-10-20 01:36:54,26GRC326,Prajapati Om Sunnykumar,Mechanical,Present
+2025-10-20 01:36:54,26GRC309,Parmar Darshan,Mechanical,Present
+2025-10-20 01:36:54,26GRC304,Taksh Hemal Pandya,Mechanical,Present
+2025-10-20 01:36:55,26GRC303,Patel Shubh Vishnubhai,Mechanical,Present
+2025-10-20 01:36:55,26GRC302,Paida Harsh,Mechanical,Present
+2025-10-20 01:36:56,26GRC300,Zaid Haidermiya Saiyad,Mechanical,Present
+2025-10-20 01:36:56,26GRC287,Panchal Harshkumar bharatbhai,Mechanical,Present
+2025-10-20 01:36:57,26GRC285,Dhruv Udaybhai Zala,Mechanical,Present
+2025-10-20 01:36:57,26GRC282,Dhruviil Panchal,Mechanical,Present
+2025-10-20 01:36:57,26GRC283,Thummar Ayush,Mechanical,Present
+2025-10-20 01:36:57,26GRC278,Patel Prince Mukeshbhai,Mechanical,Present
+2025-10-20 01:36:58,26GRC276,Dev Rajkamal,Mechanical,Present
+2025-10-20 01:36:58,26GRC270,Kachhadiya Harmin Bharat Bhai,Mechanical,Present
+2025-10-20 01:36:59,26GRC269,Savaliya Dhyey,Mechanical,Present
+2025-10-20 01:36:59,26GRC267,Chauhan Hitesh Manojbhai,Mechanical,Present
+2025-10-20 01:37:00,26GRC504,Vishvesh K. Solanki,Management,Present
+2025-10-20 01:37:00,26GRC334,Dhruvesh Patel,Management,Present
+2025-10-20 01:37:01,26GRC333,MohammadSuhan Salim Halepotra,Management,Present
+2025-10-20 01:37:01,26GRC272,Dave Shiv,Management,Present
+2025-10-20 01:37:01,26GRC248,Dev Prashantbhai Chokshi,Management,Present
+2025-10-20 01:37:02,26GRC245,Vidhaan Mahendra Prajapati,Management,Present
+2025-10-20 01:37:03,26GRC228,Pranav Jain,Management,Present
