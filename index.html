@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTU Robotics Club QR Scanner (Sectioned & Persistent)</title>
+    <title>GTU Robotics Club QR Scanner (Universal Scanning & Sectioned Reports)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.5.20/dist/jspdf.plugin.autotable.js"></script>
@@ -22,12 +22,14 @@
         .buttons-group { display: flex; gap: 10px; margin-top: 20px; }
         button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background-color 0.3s; }
         button:hover { background-color: #0056b3; }
+        label { font-weight: bold; margin-right: 10px; }
     </style>
 </head>
 <body>
     <h1>GTU Robotics Club QR Code Attendance Scanner</h1>
     
-    <select id="section-selector" onchange="updateSectionTitle()">
+    <label for="section-selector">Select Section for Report:</label>
+    <select id="section-selector">
         <option value="Management">Management Section</option>
         <option value="Mechanical">Mechanical Section</option>
         <option value="Circuitry">Circuitry Section</option>
@@ -213,11 +215,6 @@
             }
         }
         
-        function updateSectionTitle() {
-            const selectedSection = sectionSelector.value;
-            document.querySelector('h1').textContent = `GTU Robotics Club QR Code Scanner - ${selectedSection}`;
-        }
-
         // --- Core Scanner Logic ---
 
         async function startScanner() {
@@ -258,7 +255,6 @@
         // --- Check-In/Check-Out Logic ---
         function handleQrCode(grc_id) {
             const currentTime = Date.now();
-            const selectedSection = sectionSelector.value;
             
             // Apply cooldown
             if (currentTime - lastScanTime < SCAN_COOLDOWN && grc_id === lastScannedId) {
@@ -285,17 +281,6 @@
                 });
                 return;
             }
-            
-            // 🔑 NEW: Verify student belongs to the active section
-            if (student.class !== selectedSection) {
-                 updateResultUI({
-                    status: "Error",
-                    message: `⚠️ Error: ${student.name} belongs to ${student.class}. Change section to scan.`,
-                    grc_id: grc_id,
-                    timestamp: new Date().toLocaleTimeString()
-                });
-                return;
-            }
 
             // Find the last open check-in entry for this student
             const lastEntryIndex = ATTENDANCE_HISTORY.findIndex(
@@ -317,14 +302,14 @@
                 };
                 ATTENDANCE_HISTORY.push(newEntry);
                 
-                statusMessage = `✅ CHECK-IN successful for ${student.name} (${selectedSection})`;
+                statusMessage = `✅ CHECK-IN successful for ${student.name} (${student.class})`;
                 status = "Check-In Success";
 
             } else {
                 // Open entry found -> **CHECK-OUT**
                 ATTENDANCE_HISTORY[lastEntryIndex].outTime = logTimestamp;
 
-                statusMessage = `👋 CHECK-OUT successful for ${student.name} (${selectedSection})`;
+                statusMessage = `👋 CHECK-OUT successful for ${student.name} (${student.class})`;
                 status = "Check-Out Success";
             }
             
@@ -431,7 +416,6 @@
         
         // --- Initialization ---
         loadAttendanceHistory();
-        updateSectionTitle();
         startScanner();
     </script>
 </body>
