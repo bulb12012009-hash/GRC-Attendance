@@ -1,413 +1,720 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTU Robotics Club QR Scanner</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/jspdf-autotable@3.5.20/dist/jspdf.plugin.autotable.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        h1 { color: #333; margin-bottom: 20px; }
-        #video-container { width: 100%; max-width: 500px; position: relative; background: #000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        video { width: 100%; display: block; border-radius: 8px; }
-        #result-container { margin-top: 20px; padding: 15px; min-height: 50px; width: 100%; max-width: 500px; text-align: center; border-radius: 8px; font-size: 1.1em; font-weight: bold; transition: background-color 0.3s, color 0.3s; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        p { margin: 5px 0 0 0; font-weight: normal; font-size: 0.9em; }
-        .buttons-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background-color 0.3s; }
-        button:hover { background-color: #0056b3; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GTU Robotics Club — Attendance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0d1b2a; --card:#10263a; --accent:#00ff99; --text:#e6eef6; --muted:#93a7bf; --border:rgba(0,255,153,0.08);
+    font-family:Inter, Arial, sans-serif;
+  }
+  [data-theme="light"]{
+    --bg:#f5f7fb; --card:#ffffff; --text:#111; --muted:#5b6b7a; --border:rgba(10,150,90,0.06);
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+  .page{max-width:1200px;margin:20px auto;padding:16px}
+  header{display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px}
+  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#00cc88,#0066ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:#022}
+  h1{margin:0;font-size:20px;color:var(--accent)}
+  .muted{color:var(--muted);font-size:13px}
+  .auth{display:flex;gap:8px;align-items:center;margin-left:auto}
+  .input{padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);outline:none}
+  button{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-weight:700; transition: transform 0.15s ease-out;}
+  button:hover{transform: scale(1.05);}
+  .btn-primary{background:linear-gradient(135deg,#00ff99,#3a86ff);border:none;color:#042}
+  .btn-ghost{border-style:dashed}
+  .layout{display:grid;grid-template-columns:1fr 420px;gap:16px}
+  .card{background:var(--card);padding:12px;border-radius:12px;border:1px solid var(--border)}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .title{font-weight:800;color:var(--accent)}
+  .master-scroll{max-height:540px;overflow:auto;padding:6px;border-radius:8px;border:1px solid var(--border)}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px; transition: background-color 0.3s;}
+  .row:hover{background:rgba(255,255,255,0.02)}
+  .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#00cc88,#0066ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:#022;flex-shrink:0}
+  .badge{padding:6px 10px;border-radius:999px;font-weight:800;font-size:13px}
+  /* Statuses for lists */
+  .status-present{background:rgba(6,214,160,0.12);color:#06d6a0} /* Green for 'Present (Out)' */
+  .status-absent{background:rgba(239,71,111,0.12);color:#ef476f} /* Red for 'Absent' */
+  .status-active{background:rgba(58, 134, 255, 0.12);color:#3a86ff} /* Blue for 'Active (In)' */
+  
+  .progress{height:8px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .45s}
+  #dashboardCanvas{width:100%;display:block;border-radius:6px;max-height:220px;}
+  .toast{position:fixed;right:18px;bottom:18px;background:rgba(12,20,32,0.95);padding:8px 12px;border-radius:10px;color:var(--accent);font-weight:800;z-index:9999}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  @media (max-width:980px){ .layout{grid-template-columns:1fr} .auth{flex-wrap:wrap} }
+  .kbd{background:rgba(255,255,255,0.03);padding:4px 6px;border-radius:6px;font-weight:700}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+  .input:focus, button:focus, select:focus { box-shadow:0 0 0 3px rgba(0,255,153,0.06); border-color:var(--accent) }
+
+  /* Added from index-7 for scanner UI */
+  #video-container { width: 100%; max-width: 500px; position: relative; background: #000; border-radius: 8px; margin: 0 auto 10px auto; }
+  video { width: 100%; display: block; border-radius: 8px; }
+  #result-container { padding: 10px; min-height: 40px; text-align: center; border-radius: 8px; font-size: 1em; font-weight: bold; transition: background-color 0.3s, color 0.3s; }
+  #result-container.success { background-color: var(--accent); color: var(--bg); border: 1px solid var(--accent); }
+  #result-container.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  #result-container p { margin: 5px 0 0 0; font-weight: normal; font-size: 0.9em; }
+
+</style>
 </head>
 <body>
-    <h1>GTU Robotics Club QR Code Attendance Scanner</h1>
-    
-    <div id="video-container">
-        <video id="video" playsinline></video>
+  <script type="text/javascript">
+    var gk_isXlsx = false; var gk_xlsxFileLookup = {}; var gk_fileData = {};
+    function filledCell(cell) { return cell !== '' && cell != null; }
+    function loadFileData(filename) { return gk_fileData[filename] || ""; }
+  </script>
+
+  <div class="page" role="application" aria-label="Attendance app">
+    <header>
+      <div class="logo" aria-hidden="true">GRC</div>
+      <div style="flex:1">
+        <h1>GTU Robotics Club — Attendance Dashboard</h1>
+        <div class="muted">Live QR scanning, dashboard, and PDF reports</div>
+      </div>
+      <div class="auth">
+        <button id="themeBtn" class="btn-ghost">🌙</button>
+      </div>
+    </header>
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="title">📊 Live Dashboard</div><div class="muted">Real-time attendance stats</div></div>
+          <div id="statsRow" style="display:flex;gap:8px;align-items:center;margin-bottom:8px; flex-wrap:wrap;"></div>
+          <canvas id="dashboardCanvas"></canvas>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div class="card-header"><div class="title">📷 Live Scanner</div><div class="muted">Scan QR Code</div></div>
+          <div id="video-container">
+            <video id="video" playsinline></video>
+          </div>
+          <div id="result-container" class="muted">Point camera at a QR code...</div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div class="card-header"><div class="title">📤 Export & Actions</div></div>
+          <div class="controls">
+            <button id="downloadReportBtn" class="btn-primary">⬇️ Download Full Report (PDF)</button>
+            <button id="clearHistoryBtn" class="btn-ghost" style="background-color:#ef476f; color:white; border-color:#ef476f;">Clear All History</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="title">📋 All Members</div><div class="muted">Status grouped by section</div></div>
+          <div class="master-scroll" id="studentList"></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div class="card-header"><div class="title">🔵 Active Members (Checked-in)</div><div class="muted" id="lowAttStatus">Auto-refreshes</div></div>
+          <div id="lowList" style="max-height:300px;overflow:auto" class="muted">No members currently checked-in.</div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div class="card-header"><div class="title">🕒 Recent Scans</div><div class="muted">Latest 50 actions</div></div>
+          <div id="recentList" style="max-height:260px;overflow:auto" class="muted">No recent scans</div>
+        </div>
+      </div>
     </div>
+    <footer>Built for GTU Robotics Club • Live dashboard & reporting</footer>
+  </div>
+  <div id="toastWrap" aria-live="polite"></div>
+<script>
+(function(){
+  'use strict';
 
-    <div id="result-container">Scan a QR code to mark attendance...</div>
+  // --- STUDENT DATA (from index-7) ---
+  const STUDENTS_DATA = {
+      "Management": [
+          {"enrollmentNumber": "26GRC227", "name": "Aryan Desai"},
+          {"enrollmentNumber": "26GRC228", "name": "Pranav Jain"},
+           {"enrollmentNumber": "26GRC235", "name": "Geetesh mahajan"},
+           {"enrollmentNumber": "26GRC236", "name": "Manav Jogendra Sharma"},
+           {"enrollmentNumber": "26GRC237", "name": "PRAJVAL DAVRA"},
+           {"enrollmentNumber": "26GRC244", "name": "Krish savani"},
+           {"enrollmentNumber": "26GRC245", "name": "Vidhaan Mahendra Prajapati"},
+           {"enrollmentNumber": "26GRC248", "name": "Dev Prashantbhai Chokshi"},
+           {"enrollmentNumber": "26GRC272", "name": "Dave Shiv"},
+           {"enrollmentNumber": "26GRC333", "name": "MohammadSuhan Salim Halepotra"},
+           {"enrollmentNumber": "26GRC334", "name": "Dhruvesh Patel"},
+           {"enrollmentNumber": "26GRC504", "name": "Vishvesh K. Solanki"}
+      ],
+      "Mechanical": [
+          {"enrollmentNumber": "26GRC267", "name": "Chauhan Hitesh Manojbhai"},
+          {"enrollmentNumber": "26GRC268", "name": "Thakur Harsh Raj Mukund"},
+          {"enrollmentNumber": "26GRC269", "name": "Savaliya Dhyey"},
+           {"enrollmentNumber": "26GRC270", "name": "Kachhadiya Harmin Bharat Bhai"},
+           {"enrollmentNumber": "26GRC276", "name": "Dev Rajkamal"},
+           {"enrollmentNumber": "26GRC278", "name": "Patel Prince Mukeshbhai"},
+           {"enrollmentNumber": "26GRC283", "name": "Thummar Ayush"},
+           {"enrollmentNumber": "26GRC282", "name": "Dhruviil Panchal"},
+           {"enrollmentNumber": "26GRC285", "name": "Dhruv Udaybhai Zala"},
+           {"enrollmentNumber": "26GRC287", "name": "Panchal Harshkumar bharatbhai"},
+           {"enrollmentNumber": "26GRC293", "name": "Raval Hariom Bhaveshbhai"},
+           {"enrollmentNumber": "26GRC300", "name": "Zaid Haidermiya Saiyad"},
+           {"enrollmentNumber": "26GRC302", "name": "Paida Harsh"},
+           {"enrollmentNumber": "26GRC303", "name": "Patel Shubh Vishnubhai"},
+           {"enrollmentNumber": "26GRC304", "name": "Taksh Hemal Pandya"},
+           {"enrollmentNumber": "26GRC309", "name": "Parmar Darshan"},
+           {"enrollmentNumber": "26GRC326", "name": "Prajapati Om Sunnykumar"},
+           {"enrollmentNumber": "26GRC330", "name": "Tejas Rajnikant Sathawara"}
+      ],
+      "Circuitry": [
+          {"enrollmentNumber": "26GRC001", "name": "Joshi Om Dharmeshbhai"},
+          {"enrollmentNumber": "26GRC002", "name": "Patadiya Dhairya Kamleshbhai"},
+          {"enrollmentNumber": "26GRC003", "name": "Patel Darsh Mahendra bhai"},
+           {"enrollmentNumber": "26GRC006", "name": "Dhruvin Gunjariya"},
+           {"enrollmentNumber": "26GRC008", "name": "Mavadiya Nakul Jayeshbhai"},
+           {"enrollmentNumber": "26GRC010", "name": "Sudani Harsh Rasikbhai"},
+           {"enrollmentNumber": "26GRC011", "name": "Aayush Pareshbhai Prajapati"},
+           {"enrollmentNumber": "26GRC013", "name": "PATEL SHLOK BHUPENDRA KUMAR"},
+           {"enrollmentNumber": "26GRC023", "name": "Aditya Singh"},
+           {"enrollmentNumber": "26GRC026", "name": "Zeel Manojbhai Thummar"},
+           {"enrollmentNumber": "26GRC027", "name": "KASWALA YASH PRAKASHBHAI"},
+           {"enrollmentNumber": "26GRC028", "name": "Akshita Rajesh Sharma"},
+           {"enrollmentNumber": "26GRC030", "name": "RIBADIYA MILAN PARESHBHAI"},
+           {"enrollmentNumber": "26GRC032", "name": "Gondaliya Devamkumar Girishbhai"},
+           {"enrollmentNumber": "26GRC033", "name": "Pawar Shivani Rajendrasingh"},
+           {"enrollmentNumber": "26GRC036", "name": "Parmar drashti shaileshbhai"},
+           {"enrollmentNumber": "26GRC038", "name": "Dhruvisha Agja"},
+           {"enrollmentNumber": "26GRC041", "name": "ZALA Milandipsinh Mahobatsinh"},
+           {"enrollmentNumber": "26GRC047", "name": "DHAMELIYA TAKSH BHAGWATIBHAI"},
+           {"enrollmentNumber": "26GRC048", "name": "Sagar Borole"},
+           {"enrollmentNumber": "26GRC049", "name": "SHEKHAR PRADHAN"},
+           {"enrollmentNumber": "26GRC051", "name": "Fenil Pravinbhai Patel"},
+           {"enrollmentNumber": "26GRC054", "name": "Parmar vedant Jaydeepbhai"},
+           {"enrollmentNumber": "26GRC055", "name": "rushabh jadav"},
+           {"enrollmentNumber": "26GRC057", "name": "Rathod Kashish Vinodbhai"},
+           {"enrollmentNumber": "26GRC058", "name": "Mridul Mithilesh Shukla"},
+           {"enrollmentNumber": "26GRC059", "name": "Daksh Mehta"},
+           {"enrollmentNumber": "26GRC064", "name": "Joshi Rishi Brijesh"},
+           {"enrollmentNumber": "26GRC066", "name": "Harshul shah"},
+           {"enrollmentNumber": "26GRC071", "name": "Patel Raj Rakeshbhai"},
+           {"enrollmentNumber": "26GRC072", "name": "Mariya Fakih"},
+           {"enrollmentNumber": "26GRC075", "name": "Aditya Mehulbhai Parekh"},
+           {"enrollmentNumber": "26GRC077", "name": "Yash Sunil Singh"},
+           {"enrollmentNumber": "26GRC080", "name": "TIRTH MODI"},
+           {"enrollmentNumber": "26GRC095", "name": "Abdul Qadir Fakharuddin Subedar"},
+           {"enrollmentNumber": "26GRC098", "name": "Samarth Vyas"},
+           {"enrollmentNumber": "26GRC104", "name": "Gadariya Koshal"},
+           {"enrollmentNumber": "26GRC108", "name": "Arjun Singh"},
+           {"enrollmentNumber": "26GRC110", "name": "Himanshu Kiran Patil"},
+           {"enrollmentNumber": "26GRC111", "name": "Panchal Anjali Rupeshbhai"},
+           {"enrollmentNumber": "26GRC115", "name": "Kaushik harsh sanjay kumar"},
+           {"enrollmentNumber": "26GRC117", "name": "Lakhani Kanishk Nikhilbhai"},
+           {"enrollmentNumber": "26GRC119", "name": "Chauhan rohit ashokbhai"},
+           {"enrollmentNumber": "278", "name": "prince patel"},
+           {"enrollmentNumber": "26GRC332", "name": "hetal modha"},
+           {"enrollmentNumber": "26GRC335", "name": "Kushwaha Nikita Ramesh prasad"},
+           {"enrollmentNumber": "26GRC337", "name": "Vikash Kumar Prasad"},
+           {"enrollmentNumber": "26GRC339", "name": "dave shivam"},
+           {"enrollmentNumber": "26GRC340", "name": "Bhavik Nikunj Ramjiyani"},
+           {"enrollmentNumber": "26GRC341", "name": "jigar chaudhary"},
+           {"enrollmentNumber": "26GRC342", "name": "ANSHITA CHAUHAN RANJEETSINGH"},
+           {"enrollmentNumber": "26GRC343", "name": "het malviya"},
+           {"enrollmentNumber": "26GRC345", "name": "ODD NIKULBHAI MAHESHBHAI"},
+           {"enrollmentNumber": "26GRC346", "name": "Oza suraj pradipkumar"},
+           {"enrollmentNumber": "26GRC347", "name": "Yadav Prajwal Premsagar"},
+           {"enrollmentNumber": "26GRC348", "name": "Arya Venkatesh Pandu"},
+           {"enrollmentNumber": "26GRC349", "name": "rohit patel"},
+           {"enrollmentNumber": "26GRC351", "name": "patel hardik"},
+           {"enrollmentNumber": "26GRC352", "name": "patel gresi"},
+           {"enrollmentNumber": "26GRC353", "name": "Kavyansh Pandya"},
+           {"enrollmentNumber": "26GRC354", "name": "MOHANTY RAJAT SURESHKUMAR"},
+           {"enrollmentNumber": "26GRC357", "name": "Parmar Aryan Virabhai"},
+           {"enrollmentNumber": "26GRC501", "name": "Shah Daksh Vipulkumar"},
+           {"enrollmentNumber": "26GRC503", "name": "Fapale Ishwari Anilbhai"},
+           {"enrollmentNumber": "26GRC506", "name": "Anuj Vipul Shah Mall"},
+           {"enrollmentNumber": "26GRC507", "name": "rudra puwar"},
+           {"enrollmentNumber": "26GRC508", "name": "Khushi Kumari"},
+           {"enrollmentNumber": "26GRC513", "name": "GIRI NIKHIL UPENDRA"},
+           {"enrollmentNumber": "26GRC514", "name": "saw ranjeet"},
+           {"enrollmentNumber": "26GRC517", "name": "chauhan abhishekh"},
+           {"enrollmentNumber": "26GRC518", "name": "depani denil"},
+           {"enrollmentNumber": "26GRC519", "name": "shrey chaniyara"},
+           {"enrollmentNumber": "26GRC522", "name": "Yashvi Ashitbhai Chulawala"},
+           {"enrollmentNumber": "26GRC523", "name": "Aryan Tolani"},
+           {"enrollmentNumber": "26GRC524", "name": "BADANE TANISH BHAGWAN"},
+           {"enrollmentNumber": "26GRC600", "name": "Prajapati Sachinkumar Ashvinbhai"},
+           {"enrollmentNumber": "285", "name": "prajapati haresh kumar"},
+           {"enrollmentNumber": "509", "name": "saurabh singh"},
+           {"enrollmentNumber": "521", "name": "khusli jariwala"},
+           {"enrollmentNumber": "601", "name": "pragati sharma"}
+      ]
+  };
 
-    <div class="buttons-group">
-        <button onclick="downloadFullReport()">Download Full Attendance Report (PDF)</button>
-        <button onclick="clearAttendanceHistory()" style="background-color: #dc3545;">Clear All History</button>
-    </div>
+  // Create a single, easy-to-search map of all students
+  const STUDENT_MAP = {};
+  let TOTAL_STUDENTS = 0;
+  Object.keys(STUDENTS_DATA).forEach(section => {
+      STUDENTS_DATA[section].forEach(student => {
+          STUDENT_MAP[student.enrollmentNumber] = {...student, class: section};
+          TOTAL_STUDENTS++;
+      });
+  });
+
+  // --- STATE & STORAGE (from index-7) ---
+  const STORAGE_KEY = 'GRC_ATTENDANCE_LOG';
+  let ATTENDANCE_HISTORY = [];
+  let currentTheme = 'dark'; // Store theme separately
+  
+  // Scanner state
+  let lastScanTime = 0;
+  let lastScannedId = null;
+  const SCAN_COOLDOWN = 3000; // 3 seconds cooldown
+
+  // --- UTILITIES ---
+  const $ = id => document.getElementById(id);
+  function mk(tag, props = {}, children = []) { const e = document.createElement(tag); Object.entries(props).forEach(([key, value]) => { if (key === 'class') e.className = value; else if (key === 'text') e.textContent = value; else if (key === 'html') e.innerHTML = value; else e.setAttribute(key, value); }); (Array.isArray(children) ? children : [children]).flat().forEach(c => { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else if (c instanceof Node) e.appendChild(c); }); return e; }
+  const escape = s => String(s == null ? '' : s);
+  function showToast(msg, ms = 2000) { const w = $('toastWrap'); w.innerHTML = ''; const t = mk('div', { class: 'toast', text: msg }); w.appendChild(t); setTimeout(() => t.remove(), ms); }
+  
+  // --- DOM NODES ---
+  const nodes = {
+    studentList: $('studentList'),
+    recentList: $('recentList'),
+    lowList: $('lowList'),
+    statsRow: $('statsRow'),
+    dashboardCanvas: $('dashboardCanvas'),
+    themeBtn: $('themeBtn'),
+    downloadReportBtn: $('downloadReportBtn'),
+    clearHistoryBtn: $('clearHistoryBtn'),
+    video: $('video'),
+    resultContainer: $('result-container')
+  };
+  let dashboardChart = null;
+
+  // --- PERSISTENCE (from index-7) ---
+  function loadAttendanceHistory() {
+      try {
+          const storedLog = localStorage.getItem(STORAGE_KEY);
+          ATTENDANCE_HISTORY = storedLog ? JSON.parse(storedLog) : [];
+          const storedTheme = localStorage.getItem('GRC_THEME');
+          currentTheme = storedTheme || 'dark';
+      } catch (e) {
+          console.error("Failed to load attendance history:", e);
+          ATTENDANCE_HISTORY = [];
+          currentTheme = 'dark';
+      }
+  }
+
+  function saveAttendanceHistory() {
+      try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(ATTENDANCE_HISTORY));
+      } catch (e) {
+          console.error("Failed to save attendance history:", e);
+      }
+  }
+
+  function clearAttendanceHistory() {
+      if (confirm("WARNING: This will permanently delete ALL saved attendance data. Are you sure?")) {
+          localStorage.removeItem(STORAGE_KEY);
+          ATTENDANCE_HISTORY = [];
+          showToast("History cleared successfully.");
+          renderAll();
+      }
+  }
+
+  // --- RENDER FUNCTIONS (Adapted from index-8) ---
+  
+  function getAttendanceStats() {
+    const uniqueEntries = new Map();
+    ATTENDANCE_HISTORY.forEach(entry => {
+        uniqueEntries.set(entry.grc_id, entry); // Keep only the latest entry per ID
+    });
+
+    let active = 0;
+    let present = 0;
     
-    <script>
-        const video = document.getElementById('video');
-        const resultContainer = document.getElementById('result-container');
-        
-        let lastScanTime = 0;
-        let lastScannedId = null;
-        const SCAN_COOLDOWN = 3000; // 3 seconds cooldown
-        
-        let ATTENDANCE_HISTORY = [];
-        const STORAGE_KEY = 'GRC_ATTENDANCE_LOG';
-        
-        // --- STUDENT DATA Grouped by Section ---
-        const STUDENTS_DATA = {
-            "Management": [
-                {"enrollmentNumber": "26GRC227", "name": "Aryan Desai"},
-                {"enrollmentNumber": "26GRC228", "name": "Pranav Jain"},
-                // ... (rest of Management students) ...
-                 {"enrollmentNumber": "26GRC235", "name": "Geetesh mahajan"},
-                 {"enrollmentNumber": "26GRC236", "name": "Manav Jogendra Sharma"},
-                 {"enrollmentNumber": "26GRC237", "name": "PRAJVAL DAVRA"},
-                 {"enrollmentNumber": "26GRC244", "name": "Krish savani"},
-                 {"enrollmentNumber": "26GRC245", "name": "Vidhaan Mahendra Prajapati"},
-                 {"enrollmentNumber": "26GRC248", "name": "Dev Prashantbhai Chokshi"},
-                 {"enrollmentNumber": "26GRC272", "name": "Dave Shiv"},
-                 {"enrollmentNumber": "26GRC333", "name": "MohammadSuhan Salim Halepotra"},
-                 {"enrollmentNumber": "26GRC334", "name": "Dhruvesh Patel"},
-                 {"enrollmentNumber": "26GRC504", "name": "Vishvesh K. Solanki"}
-            ],
-            "Mechanical": [
-                {"enrollmentNumber": "26GRC267", "name": "Chauhan Hitesh Manojbhai"},
-                {"enrollmentNumber": "26GRC268", "name": "Thakur Harsh Raj Mukund"},
-                // ... (rest of Mechanical students) ...
-                {"enrollmentNumber": "26GRC269", "name": "Savaliya Dhyey"},
-                 {"enrollmentNumber": "26GRC270", "name": "Kachhadiya Harmin Bharat Bhai"},
-                 {"enrollmentNumber": "26GRC276", "name": "Dev Rajkamal"},
-                 {"enrollmentNumber": "26GRC278", "name": "Patel Prince Mukeshbhai"},
-                 {"enrollmentNumber": "26GRC283", "name": "Thummar Ayush"},
-                 {"enrollmentNumber": "26GRC282", "name": "Dhruviil Panchal"},
-                 {"enrollmentNumber": "26GRC285", "name": "Dhruv Udaybhai Zala"},
-                 {"enrollmentNumber": "26GRC287", "name": "Panchal Harshkumar bharatbhai"},
-                 {"enrollmentNumber": "26GRC293", "name": "Raval Hariom Bhaveshbhai"},
-                 {"enrollmentNumber": "26GRC300", "name": "Zaid Haidermiya Saiyad"},
-                 {"enrollmentNumber": "26GRC302", "name": "Paida Harsh"},
-                 {"enrollmentNumber": "26GRC303", "name": "Patel Shubh Vishnubhai"},
-                 {"enrollmentNumber": "26GRC304", "name": "Taksh Hemal Pandya"},
-                 {"enrollmentNumber": "26GRC309", "name": "Parmar Darshan"},
-                 {"enrollmentNumber": "26GRC326", "name": "Prajapati Om Sunnykumar"},
-                 {"enrollmentNumber": "26GRC330", "name": "Tejas Rajnikant Sathawara"}
-            ],
-            "Circuitry": [
-                {"enrollmentNumber": "26GRC001", "name": "Joshi Om Dharmeshbhai"},
-                {"enrollmentNumber": "26GRC002", "name": "Patadiya Dhairya Kamleshbhai"},
-                // ... (rest of Circuitry students) ...
-                {"enrollmentNumber": "26GRC003", "name": "Patel Darsh Mahendra bhai"},
-                 {"enrollmentNumber": "26GRC006", "name": "Dhruvin Gunjariya"},
-                 {"enrollmentNumber": "26GRC008", "name": "Mavadiya Nakul Jayeshbhai"},
-                 {"enrollmentNumber": "26GRC010", "name": "Sudani Harsh Rasikbhai"},
-                 {"enrollmentNumber": "26GRC011", "name": "Aayush Pareshbhai Prajapati"},
-                 {"enrollmentNumber": "26GRC013", "name": "PATEL SHLOK BHUPENDRA KUMAR"},
-                 {"enrollmentNumber": "26GRC023", "name": "Aditya Singh"},
-                 {"enrollmentNumber": "26GRC026", "name": "Zeel Manojbhai Thummar"},
-                 {"enrollmentNumber": "26GRC027", "name": "KASWALA YASH PRAKASHBHAI"},
-                 {"enrollmentNumber": "26GRC028", "name": "Akshita Rajesh Sharma"},
-                 {"enrollmentNumber": "26GRC030", "name": "RIBADIYA MILAN PARESHBHAI"},
-                 {"enrollmentNumber": "26GRC032", "name": "Gondaliya Devamkumar Girishbhai"},
-                 {"enrollmentNumber": "26GRC033", "name": "Pawar Shivani Rajendrasingh"},
-                 {"enrollmentNumber": "26GRC036", "name": "Parmar drashti shaileshbhai"},
-                 {"enrollmentNumber": "26GRC038", "name": "Dhruvisha Agja"},
-                 {"enrollmentNumber": "26GRC041", "name": "ZALA Milandipsinh Mahobatsinh"},
-                 {"enrollmentNumber": "26GRC047", "name": "DHAMELIYA TAKSH BHAGWATIBHAI"},
-                 {"enrollmentNumber": "26GRC048", "name": "Sagar Borole"},
-                 {"enrollmentNumber": "26GRC049", "name": "SHEKHAR PRADHAN"},
-                 {"enrollmentNumber": "26GRC051", "name": "Fenil Pravinbhai Patel"},
-                 {"enrollmentNumber": "26GRC054", "name": "Parmar vedant Jaydeepbhai"},
-                 {"enrollmentNumber": "26GRC055", "name": "rushabh jadav"},
-                 {"enrollmentNumber": "26GRC057", "name": "Rathod Kashish Vinodbhai"},
-                 {"enrollmentNumber": "26GRC058", "name": "Mridul Mithilesh Shukla"},
-                 {"enrollmentNumber": "26GRC059", "name": "Daksh Mehta"},
-                 {"enrollmentNumber": "26GRC064", "name": "Joshi Rishi Brijesh"},
-                 {"enrollmentNumber": "26GRC066", "name": "Harshul shah"},
-                 {"enrollmentNumber": "26GRC071", "name": "Patel Raj Rakeshbhai"},
-                 {"enrollmentNumber": "26GRC072", "name": "Mariya Fakih"},
-                 {"enrollmentNumber": "26GRC075", "name": "Aditya Mehulbhai Parekh"},
-                 {"enrollmentNumber": "26GRC077", "name": "Yash Sunil Singh"},
-                 {"enrollmentNumber": "26GRC080", "name": "TIRTH MODI"},
-                 {"enrollmentNumber": "26GRC095", "name": "Abdul Qadir Fakharuddin Subedar"},
-                 {"enrollmentNumber": "26GRC098", "name": "Samarth Vyas"},
-                 {"enrollmentNumber": "26GRC104", "name": "Gadariya Koshal"},
-                 {"enrollmentNumber": "26GRC108", "name": "Arjun Singh"},
-                 {"enrollmentNumber": "26GRC110", "name": "Himanshu Kiran Patil"},
-                 {"enrollmentNumber": "26GRC111", "name": "Panchal Anjali Rupeshbhai"},
-                 {"enrollmentNumber": "26GRC115", "name": "Kaushik harsh sanjay kumar"},
-                 {"enrollmentNumber": "26GRC117", "name": "Lakhani Kanishk Nikhilbhai"},
-                 {"enrollmentNumber": "26GRC119", "name": "Chauhan rohit ashokbhai"},
-                 {"enrollmentNumber": "278", "name": "prince patel"},
-                 {"enrollmentNumber": "26GRC332", "name": "hetal modha"},
-                 {"enrollmentNumber": "26GRC335", "name": "Kushwaha Nikita Ramesh prasad"},
-                 {"enrollmentNumber": "26GRC337", "name": "Vikash Kumar Prasad"},
-                 {"enrollmentNumber": "26GRC339", "name": "dave shivam"},
-                 {"enrollmentNumber": "26GRC340", "name": "Bhavik Nikunj Ramjiyani"},
-                 {"enrollmentNumber": "26GRC341", "name": "jigar chaudhary"},
-                 {"enrollmentNumber": "26GRC342", "name": "ANSHITA CHAUHAN RANJEETSINGH"},
-                 {"enrollmentNumber": "26GRC343", "name": "het malviya"},
-                 {"enrollmentNumber": "26GRC345", "name": "ODD NIKULBHAI MAHESHBHAI"},
-                 {"enrollmentNumber": "26GRC346", "name": "Oza suraj pradipkumar"},
-                 {"enrollmentNumber": "26GRC347", "name": "Yadav Prajwal Premsagar"},
-                 {"enrollmentNumber": "26GRC348", "name": "Arya Venkatesh Pandu"},
-                 {"enrollmentNumber": "26GRC349", "name": "rohit patel"},
-                 {"enrollmentNumber": "26GRC351", "name": "patel hardik"},
-                 {"enrollmentNumber": "26GRC352", "name": "patel gresi"},
-                 {"enrollmentNumber": "26GRC353", "name": "Kavyansh Pandya"},
-                 {"enrollmentNumber": "26GRC354", "name": "MOHANTY RAJAT SURESHKUMAR"},
-                 {"enrollmentNumber": "26GRC357", "name": "Parmar Aryan Virabhai"},
-                 {"enrollmentNumber": "26GRC501", "name": "Shah Daksh Vipulkumar"},
-                 {"enrollmentNumber": "26GRC503", "name": "Fapale Ishwari Anilbhai"},
-                 {"enrollmentNumber": "26GRC506", "name": "Anuj Vipul Shah Mall"},
-                 {"enrollmentNumber": "26GRC507", "name": "rudra puwar"},
-                 {"enrollmentNumber": "26GRC508", "name": "Khushi Kumari"},
-                 {"enrollmentNumber": "26GRC513", "name": "GIRI NIKHIL UPENDRA"},
-                 {"enrollmentNumber": "26GRC514", "name": "saw ranjeet"},
-                 {"enrollmentNumber": "26GRC517", "name": "chauhan abhishekh"},
-                 {"enrollmentNumber": "26GRC518", "name": "depani denil"},
-                 {"enrollmentNumber": "26GRC519", "name": "shrey chaniyara"},
-                 {"enrollmentNumber": "26GRC522", "name": "Yashvi Ashitbhai Chulawala"},
-                 {"enrollmentNumber": "26GRC523", "name": "Aryan Tolani"},
-                 {"enrollmentNumber": "26GRC524", "name": "BADANE TANISH BHAGWAN"},
-                 {"enrollmentNumber": "26GRC600", "name": "Prajapati Sachinkumar Ashvinbhai"},
-                 {"enrollmentNumber": "285", "name": "prajapati haresh kumar"},
-                 {"enrollmentNumber": "509", "name": "saurabh singh"},
-                 {"enrollmentNumber": "521", "name": "khusli jariwala"},
-                 {"enrollmentNumber": "601", "name": "pragati sharma"}
-            ]
-        };
+    uniqueEntries.forEach(entry => {
+      if (!entry.outTime) {
+        active++;
+      } else {
+        present++;
+      }
+    });
+    
+    const absent = TOTAL_STUDENTS - (active + present);
+    return { active, present, absent };
+  }
 
-        // This creates a single, easy-to-search map of all students
-        const STUDENT_MAP = {};
-        Object.keys(STUDENTS_DATA).forEach(section => {
-            STUDENTS_DATA[section].forEach(student => {
-                // Add the 'class' property to each student for easy lookup
-                STUDENT_MAP[student.enrollmentNumber] = {...student, class: section};
-            });
-        });
+  function renderDashboard() {
+    const { active, present, absent } = getAttendanceStats();
+    
+    nodes.statsRow.innerHTML = '';
+    const stats = [
+      { label: 'Active (In)', count: active, class: 'status-active' },
+      { label: 'Present (Out)', count: present, class: 'status-present' },
+      { label: 'Absent', count: absent, class: 'status-absent' }
+    ];
+    
+    stats.forEach(s => {
+      nodes.statsRow.appendChild(mk('div', { class: `badge ${s.class}`, html: `${s.label}: <b>${s.count}</b>` }));
+    });
 
-        // --- Persistence Functions ---
-        function loadAttendanceHistory() {
-            try {
-                const storedLog = localStorage.getItem(STORAGE_KEY);
-                ATTENDANCE_HISTORY = storedLog ? JSON.parse(storedLog) : [];
-            } catch (e) {
-                console.error("Failed to load attendance history:", e);
-                ATTENDANCE_HISTORY = [];
-            }
+    const data = [active, present, absent];
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text');
+    
+    if (dashboardChart) {
+      dashboardChart.data.labels = ['Active (In)', 'Present (Out)', 'Absent'];
+      dashboardChart.data.datasets[0].data = data;
+      dashboardChart.update();
+    } else {
+      dashboardChart = new Chart(nodes.dashboardCanvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['Active (In)', 'Present (Out)', 'Absent'],
+          datasets: [{ data, backgroundColor: ['#3a86ff', '#06d6a0', '#ef476f'] }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: textColor } },
+            title: { display: true, text: `GRC Event Status (Total: ${TOTAL_STUDENTS})`, color: textColor }
+          }
         }
+      });
+    }
+  }
+  
+  function renderAllStudents() {
+    const container = nodes.studentList;
+    container.innerHTML = '';
+    container.classList.remove('muted');
 
-        function saveAttendanceHistory() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(ATTENDANCE_HISTORY));
-            } catch (e) {
-                console.error("Failed to save attendance history:", e);
-            }
-        }
+    const lastEntryMap = new Map();
+    ATTENDANCE_HISTORY.forEach(entry => {
+        lastEntryMap.set(entry.grc_id, entry);
+    });
 
-        function clearAttendanceHistory() {
-            if (confirm("WARNING: This will permanently delete ALL saved attendance data. Are you sure?")) {
-                localStorage.removeItem(STORAGE_KEY);
-                ATTENDANCE_HISTORY = [];
-                updateResultUI({ status: "success", message: "History cleared successfully." });
-            }
+    Object.keys(STUDENTS_DATA).forEach(section => {
+      // Add a section header
+      const header = mk('div', { class: 'title', style: 'padding: 10px 10px 5px; border-bottom: 1px solid var(--border); margin-bottom: 5px;', text: section });
+      container.appendChild(header);
+
+      STUDENTS_DATA[section].forEach(st => {
+        const lastEntry = lastEntryMap.get(st.enrollmentNumber);
+        
+        let status = 'Absent';
+        let statusClass = 'status-absent';
+        
+        if (lastEntry) {
+          if (!lastEntry.outTime) {
+            status = 'Active';
+            statusClass = 'status-active';
+          } else {
+            status = 'Present';
+            statusClass = 'status-present';
+          }
         }
         
-        // --- Core Scanner Logic ---
-        async function startScanner() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                video.setAttribute("playsinline", true);
-                video.play();
-                requestAnimationFrame(tick);
-            } catch (e) {
-                console.error("Camera Error:", e);
-                resultContainer.innerHTML = '<p class="error">Could not access camera. Please grant permission and refresh.</p>';
-            }
-        }
+        const row = mk('div', { class: 'row', 'data-enroll': st.enrollmentNumber }, [
+          mk('div', { style: 'display:flex;align-items:center;gap:12px;' }, [
+            mk('div', { class: 'avatar', text: st.name.split(' ').slice(0, 2).map(n => n[0] || '').join('') }),
+            mk('div', {}, [
+              mk('div', { style: 'font-weight:800', text: st.name }),
+              mk('div', { class: 'muted', text: st.enrollmentNumber })
+            ])
+          ]),
+          mk('div', {}, [
+            mk('div', { class: `badge ${statusClass}`, text: status })
+          ])
+        ]);
+        container.appendChild(row);
+      });
+    });
+  }
 
-        function tick() {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                
-                canvas.height = video.videoHeight;
-                canvas.width = video.videoWidth;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-                
-                if (code) {
-                    handleQrCode(code.data.trim());
-                }
-            }
-            requestAnimationFrame(tick);
-        }
+  function renderActiveStudents() {
+    nodes.lowList.innerHTML = '';
+    
+    const activeEntries = new Map();
+    ATTENDANCE_HISTORY.forEach(entry => {
+      if (!entry.outTime) {
+        activeEntries.set(entry.grc_id, entry); // Only keep active
+      } else {
+        activeEntries.delete(entry.grc_id); // Remove if they checked out
+      }
+    });
 
-        // --- Check-In/Check-Out Logic ---
-        function handleQrCode(grc_id) {
-            const currentTime = Date.now();
-            
-            // Apply cooldown to prevent multiple scans of the same ID
-            if (currentTime - lastScanTime < SCAN_COOLDOWN && grc_id === lastScannedId) {
-                return;
-            }
-            
-            if (!grc_id) {
-                updateResultUI({ status: "error", message: "Error: No data detected in QR code." });
-                return;
-            }
-            
-            lastScanTime = currentTime;
-            lastScannedId = grc_id;
-            
-            const student = STUDENT_MAP[grc_id];
-            
-            if (!student) {
-                updateResultUI({
-                    status: "Error",
-                    message: `❌ Error: GRC_ID '${grc_id}' not found in any section.`,
-                    grc_id: grc_id,
-                    timestamp: new Date().toLocaleTimeString()
-                });
-                return;
-            }
-            
-            // REMOVED: The check that restricted scanning to a selected section is gone.
+    const rows = Array.from(activeEntries.values());
+    
+    if (!rows.length) {
+      nodes.lowList.classList.add('muted');
+      nodes.lowList.textContent = 'No members currently checked-in.';
+      return;
+    }
+    
+    nodes.lowList.classList.remove('muted');
+    rows.sort((a,b) => a.name.localeCompare(b.name)).forEach(r => {
+      const left = mk('div', { style: 'display:flex; gap:12px; align-items:center;' }, [
+        mk('div', { class: 'avatar', text: r.name.split(' ').slice(0, 2).map(n => n[0] || '').join('') }),
+        mk('div', {}, [
+          mk('div', { style: 'font-weight:800', text: r.name }),
+          mk('div', { class: 'muted', text: `${r.grc_id} • ${r.className}` })
+        ])
+      ]);
+      const badge = mk('div', { class: 'badge status-active', text: `In: ${new Date(r.inTime).toLocaleTimeString()}` });
+      nodes.lowList.appendChild(mk('div', { class: 'row' }, [left, badge]));
+    });
+  }
 
-            const lastEntryIndex = ATTENDANCE_HISTORY.findIndex(
-                entry => entry.grc_id === grc_id && !entry.outTime
-            );
+  function renderRecent() {
+    nodes.recentList.innerHTML = '';
+    const list = ATTENDANCE_HISTORY.slice().reverse().slice(0, 50);
+    
+    if (!list.length) {
+      nodes.recentList.classList.add('muted');
+      nodes.recentList.textContent = 'No recent scans';
+      return;
+    }
+    
+    nodes.recentList.classList.remove('muted');
+    list.forEach(item => {
+      const isCheckIn = !item.outTime;
+      const status = isCheckIn ? 'Check-In' : 'Check-Out';
+      const time = isCheckIn ? item.inTime : item.outTime;
+      
+      const left = mk('div', { style: 'display:flex; align-items:center; gap:12px;' }, [
+        mk('div', { class: 'avatar', text: (item.name || item.grc_id).split(' ').slice(0, 2).map(n => n[0] || '').join('') }),
+        mk('div', {}, [
+          mk('div', { style: 'font-weight:800', text: item.name }),
+          mk('div', { class: 'muted', text: `${item.grc_id} • ${new Date(time).toLocaleString()}` })
+        ])
+      ]);
+      const badge = mk('div', { class: `badge ${isCheckIn ? 'status-present' : 'status-absent'}`, text: status });
+      nodes.recentList.appendChild(mk('div', { class: 'row' }, [left, badge]));
+    });
+  }
+  
+  function renderAll() {
+    renderDashboard();
+    renderAllStudents();
+    renderActiveStudents();
+    renderRecent();
+  }
 
-            let statusMessage;
-            let status;
-            const logTimestamp = new Date().toLocaleString(); 
+  // --- THEME LOGIC ---
+  function applyTheme(t) {
+    const theme = t === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    currentTheme = theme;
+    nodes.themeBtn.textContent = theme === 'light' ? '🌙' : '☀️';
+    localStorage.setItem('GRC_THEME', theme);
+    if (dashboardChart) {
+      dashboardChart.destroy();
+      dashboardChart = null;
+      renderDashboard(); // Re-render chart with new theme colors
+    }
+  }
 
-            if (lastEntryIndex === -1) {
-                // No open entry found -> CHECK-IN
-                const newEntry = {
-                    grc_id: grc_id,
-                    name: student.name,
-                    className: student.class, // Use the student's actual class
-                    inTime: logTimestamp,
-                    outTime: null,
-                };
-                ATTENDANCE_HISTORY.push(newEntry);
-                
-                // CHANGED: Message now includes the student's actual section
-                statusMessage = `✅ CHECK-IN successful for ${student.name} (${student.class})`;
-                status = "Check-In Success";
+  // --- QR SCANNER LOGIC (from index-7) ---
+  async function startScanner() {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          nodes.video.srcObject = stream;
+          nodes.video.setAttribute("playsinline", true);
+          nodes.video.play();
+          requestAnimationFrame(tick);
+      } catch (e) {
+          console.error("Camera Error:", e);
+          nodes.resultContainer.innerHTML = 'Could not access camera. Please grant permission.';
+          nodes.resultContainer.className = 'error';
+      }
+  }
 
-            } else {
-                // Open entry found -> CHECK-OUT
-                ATTENDANCE_HISTORY[lastEntryIndex].outTime = logTimestamp;
-                
-                // CHANGED: Message now includes the student's actual section
-                statusMessage = `👋 CHECK-OUT successful for ${student.name} (${student.class})`;
-                status = "Check-Out Success";
-            }
-            
-            saveAttendanceHistory();
-            updateResultUI({
-                status: status,
-                message: statusMessage,
-                grc_id: grc_id,
-                timestamp: new Date().toLocaleTimeString()
-            });
-        }
+  function tick() {
+      if (nodes.video.readyState === nodes.video.HAVE_ENOUGH_DATA) {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          canvas.height = nodes.video.videoHeight;
+          canvas.width = nodes.video.videoWidth;
+          ctx.drawImage(nodes.video, 0, 0, canvas.width, canvas.height);
+          
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "dontInvert",
+          });
+          
+          if (code) {
+              handleQrCode(code.data.trim());
+          }
+      }
+      requestAnimationFrame(tick);
+  }
 
-        // Function to update the display message
-        function updateResultUI(data) {
-            resultContainer.classList.remove("success", "error");
+  function handleQrCode(grc_id) {
+      const currentTime = Date.now();
+      
+      if (currentTime - lastScanTime < SCAN_COOLDOWN && grc_id === lastScannedId) {
+          return; // Cooldown active
+      }
+      
+      if (!grc_id) {
+          updateResultUI({ status: "error", message: "Error: No data in QR code." });
+          return;
+      }
+      
+      lastScanTime = currentTime;
+      lastScannedId = grc_id;
+      
+      const student = STUDENT_MAP[grc_id];
+      
+      if (!student) {
+          updateResultUI({
+              status: "Error",
+              message: `❌ Error: GRC_ID '${grc_id}' not found.`,
+              grc_id: grc_id
+          });
+          return;
+      }
+      
+      const lastEntryIndex = ATTENDANCE_HISTORY.findIndex(
+          entry => entry.grc_id === grc_id && !entry.outTime
+      );
 
-            if (data.status.includes("Success")) {
-                resultContainer.classList.add("success");
-                resultContainer.innerHTML = `
-                    <strong>${data.message}</strong>
-                    <p style="margin: 5px 0 0 0;">ID: ${data.grc_id || lastScannedId} | Time: ${data.timestamp}</p>
-                `;
-            } else {
-                resultContainer.classList.add("error");
-                resultContainer.innerHTML = `<strong>${data.message}</strong>`;
-            }
-        }
+      let statusMessage, status;
+      const logTimestamp = new Date().toISOString(); // Use ISO string for consistency
 
-        // --- NEW: PDF Generation for ALL sections ---
-        function downloadFullReport() {
-            const date = new Date().toLocaleDateString('en-GB');
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF();
-            
-            // Add main title for the entire report
-            pdf.text(`GTU Robotics Club - Full Attendance Report`, 14, 15);
-            pdf.text(`Report Date: ${date}`, 14, 22);
+      if (lastEntryIndex === -1) {
+          // No open entry found -> CHECK-IN
+          const newEntry = {
+              grc_id: grc_id,
+              name: student.name,
+              className: student.class,
+              inTime: logTimestamp,
+              outTime: null,
+          };
+          ATTENDANCE_HISTORY.push(newEntry);
+          statusMessage = `✅ CHECK-IN: ${student.name} (${student.class})`;
+          status = "Check-In Success";
+      } else {
+          // Open entry found -> CHECK-OUT
+          ATTENDANCE_HISTORY[lastEntryIndex].outTime = logTimestamp;
+          statusMessage = `👋 CHECK-OUT: ${student.name} (${student.class})`;
+          status = "Check-Out Success";
+      }
+      
+      saveAttendanceHistory();
+      renderAll(); // Update all UI components
+      updateResultUI({
+          status: status,
+          message: statusMessage,
+          grc_id: grc_id
+      });
+  }
 
-            // Define the order of sections for the report
-            const sectionsToReport = ["Management", "Mechanical", "Circuitry"];
+  function updateResultUI(data) {
+      const rc = nodes.resultContainer;
+      rc.classList.remove("success", "error", "muted");
 
-            for (const section of sectionsToReport) {
-                const sectionStudents = STUDENTS_DATA[section];
-                
-                if (!sectionStudents || sectionStudents.length === 0) {
-                    continue; // Skip if a section has no students
-                }
-                
-                // Prepare data for the current section's table
-                const finalReportData = sectionStudents.map(student => {
-                    const lastEntry = ATTENDANCE_HISTORY
-                        .filter(entry => entry.grc_id === student.enrollmentNumber)
-                        .slice(-1)[0]; // Get the very last entry for this student
+      if (data.status.includes("Success")) {
+          rc.classList.add("success");
+          rc.innerHTML = `<strong>${data.message}</strong>`;
+      } else {
+          rc.classList.add("error");
+          rc.innerHTML = `<strong>${data.message}</strong>`;
+      }
+  }
 
-                    let status = 'ABSENT';
-                    let inTime = '---';
-                    let outTime = '---';
+  // --- PDF EXPORT (from index-7) ---
+  function downloadFullReport() {
+      const date = new Date().toLocaleDateString('en-GB');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      
+      pdf.text(`GTU Robotics Club - Full Attendance Report`, 14, 15);
+      pdf.text(`Report Date: ${date}`, 14, 22);
 
-                    if (lastEntry) {
-                        inTime = lastEntry.inTime ? new Date(lastEntry.inTime).toLocaleTimeString() : '---';
-                        outTime = lastEntry.outTime ? new Date(lastEntry.outTime).toLocaleTimeString() : '---';
-                        status = lastEntry.outTime ? 'PRESENT' : 'ACTIVE (IN)';
-                    }
+      const sectionsToReport = ["Management", "Mechanical", "Circuitry"];
 
-                    return [
-                        student.enrollmentNumber,
-                        student.name,
-                        inTime,
-                        outTime,
-                        status
-                    ];
-                }).sort((a, b) => a[1].localeCompare(b[1])); // Sort by Name
-                
-                // Add the table for the current section to the PDF
-                // autoTable will automatically place the next table below the previous one
-                pdf.autoTable({
-                    // Add a margin to the top of each table for spacing
-                    startY: pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 15 : 30,
-                    head: [[{ content: `${section} Section Attendance`, colSpan: 5, styles: { halign: 'center', fillColor: [50, 50, 50] } }]],
-                    body: [
-                         ['ID', 'Name', 'IN Time', 'OUT Time', 'Status']
-                    ].concat(finalReportData),
-                    theme: 'grid',
-                    headStyles: { fillColor: [0, 123, 255] },
-                    didParseCell: function(data) {
-                        if (data.section === 'body' && data.row.index > 0) { // Skip the manually added header row
-                            const status = data.cell.text[0];
-                            if (data.column.index === 4) { // Status column
-                                if (status.includes('ACTIVE')) data.cell.styles.textColor = [255, 165, 0]; // Orange
-                                else if (status.includes('PRESENT')) data.cell.styles.textColor = [0, 128, 0]; // Green
-                                else if (status.includes('ABSENT')) data.cell.styles.textColor = [150, 150, 150]; // Gray
-                                data.cell.styles.fontStyle = 'bold';
-                            }
-                        }
-                    }
-                });
-            }
+      for (const section of sectionsToReport) {
+          const sectionStudents = STUDENTS_DATA[section];
+          
+          if (!sectionStudents || sectionStudents.length === 0) continue;
+          
+          const lastEntryMap = new Map();
+          ATTENDANCE_HISTORY.filter(e => e.className === section).forEach(entry => {
+              lastEntryMap.set(entry.grc_id, entry);
+          });
+          
+          const finalReportData = sectionStudents.map(student => {
+              const lastEntry = lastEntryMap.get(student.enrollmentNumber);
+              
+              let status = 'ABSENT';
+              let inTime = '---';
+              let outTime = '---';
 
-            // Save the final PDF with all sections
-            pdf.save(`Full_Attendance_Report_${date.replace(/\//g, '-')}.pdf`);
-        }
-        
-        // --- Initialization ---
-        loadAttendanceHistory();
-        startScanner();
-    </script>
+              if (lastEntry) {
+                  inTime = lastEntry.inTime ? new Date(lastEntry.inTime).toLocaleTimeString() : '---';
+                  outTime = lastEntry.outTime ? new Date(lastEntry.outTime).toLocaleTimeString() : '---';
+                  status = lastEntry.outTime ? 'PRESENT' : 'ACTIVE (IN)';
+              }
+
+              return [
+                  student.enrollmentNumber,
+                  student.name,
+                  inTime,
+                  outTime,
+                  status
+              ];
+          }).sort((a, b) => a[1].localeCompare(b[1])); // Sort by Name
+          
+          pdf.autoTable({
+              startY: pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 15 : 30,
+              head: [[{ content: `${section} Section Attendance`, colSpan: 5, styles: { halign: 'center', fillColor: [50, 50, 50] } }]],
+              body: [
+                   ['GRC Number', 'Name', 'IN Time', 'OUT Time', 'Status']
+              ].concat(finalReportData),
+              theme: 'grid',
+              headStyles: { fillColor: [0, 123, 255] },
+              didParseCell: function(data) {
+                  if (data.section === 'body' && data.row.index > 0) {
+                      const status = data.cell.text[0];
+                      if (data.column.index === 4) { // Status column
+                          if (status.includes('ACTIVE')) data.cell.styles.textColor = [58, 134, 255]; // Blue
+                          else if (status.includes('PRESENT')) data.cell.styles.textColor = [6, 214, 160]; // Green
+                          else if (status.includes('ABSENT')) data.cell.styles.textColor = [150, 150, 150]; // Gray
+                          data.cell.styles.fontStyle = 'bold';
+                      }
+                  }
+              }
+          });
+      }
+      pdf.save(`Full_Attendance_Report_${date.replace(/\//g, '-')}.pdf`);
+      showToast('PDF Downloaded');
+  }
+
+  // --- INITIALIZATION ---
+  function init() {
+    loadAttendanceHistory();
+    applyTheme(currentTheme);
+    renderAll();
+    
+    // Event Listeners
+    nodes.themeBtn.addEventListener('click', () => applyTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+    nodes.downloadReportBtn.addEventListener('click', downloadFullReport);
+    nodes.clearHistoryBtn.addEventListener('click', clearAttendanceHistory);
+    
+    // Start the scanner
+    startScanner();
+    console.log('GRC Attendance Dashboard ready.');
+  }
+  
+  init();
+
+})();
+</script>
 </body>
 </html>
